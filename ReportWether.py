@@ -1,19 +1,23 @@
 import asyncio
 import random
 from Data import get_mock_weather
+import aiofiles
 import csv
+from io import StringIO
+import aiohttp
 
-# import aiohttp
-# API_KEY = "your_openweathermap_api_key"  # เปลี่ยนเป็น API Key OpenWeatherMap
-# BASE_URL = "http://api.openweathermap.org/data/2.5/weather"
+API_KEY = "your_openweathermap_api_key"  # API Key OpenWeatherMap ของผมไม่ได้ใส่นะครับ
+BASE_URL = "http://api.openweathermap.org/data/2.5/weather"
 
 MODE = "mock"
 
 
 async def read_weather_data(file_path):
     data = []
-    with open(file_path, mode="r", encoding="utf-8") as file:
-        reader = csv.DictReader(file)
+    # ปรับใช้การดึงข้อมูลแบบ Asynchronous ครับ
+    async with aiofiles.open(file_path, mode="r", encoding="utf-8") as file:
+        content = await file.read()
+        reader = csv.DictReader(StringIO(content))
         for row in reader:
             data.append(row)
     return data
@@ -35,12 +39,13 @@ async def fetch_weather_api(city):
                 print(f"เกิดข้อผิดพลาดในการดึงข้อมูลสำหรับเมือง {city}")
                 return None
 
+    # สุ่มเวลาให้ดูเหมือนกำลังดึงข้อมูลแบบ Asynchronous ครับ
     await asyncio.sleep(random.uniform(0.5, 1.5))
     return get_mock_weather(city)
 
 
 async def fetch_weather_mock(city):
-    # สุ่มเวลาให้ดูเหมือนกำลังดึงข้อมูลแบบ Asynchronous
+    # สุ่มเวลาให้ดูเหมือนกำลังดึงข้อมูลแบบ Asynchronous ครับ
     await asyncio.sleep(random.uniform(0.5, 1.5))
     return get_mock_weather(city)
 
@@ -48,7 +53,7 @@ async def fetch_weather_mock(city):
 async def fetch_weather(city):
 
     if MODE == "csv":
-        file_path = "../Data/weather_data.csv"
+        file_path = "Data/weather_data.csv"
         weather_data = await read_weather_data(file_path)
         for row in weather_data:
             if row["city"] == city:
@@ -66,7 +71,7 @@ async def fetch_weather(city):
         return await fetch_weather_api(city)
 
     else:
-        raise ValueError("โหมดไม่ถูกต้อง: ใช้ 'csv' หรือ 'api' เท่านั้น")
+        raise ValueError("โหมดไม่ถูกต้อง: ใช้ 'mock', 'csv', 'api' เท่านั้น")
 
 
 async def display_weather(city):
